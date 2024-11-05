@@ -30,18 +30,33 @@ class Level:
         assert self.grid[i] is None
         print(f"adding room {i}")
 
-        # neighbour check
-        doors = {}
+        doors = {direction: bool(random.getrandbits(1)) for direction in self.offsets}
         for direction, offset in self.offsets.items():
             neighbor_index = i + offset
+            print(f"adding neighbor {neighbor_index} {len(self.grid)}")
+            if neighbor_index > 0 and neighbor_index < len(self.grid):
+                doors[direction] = False
+                continue
             neighbour = self.grid[neighbor_index]
+
+            # Doors to neighbours that have doors are mandatory
             if neighbour is not None and neighbour.doors[OPPOSITES[direction]]:
                 doors[direction] = True
-            else:
-                doors[direction] = bool(random.getrandbits(1))
-                if doors[direction]:
-                    self.queue.append(neighbor_index)
+            # Remove illegal doors
+            if direction == 'N' and i // self.size == 0:  # Top row
+                doors[direction] = False
+            elif direction == 'S' and i // self.size == self.size - 1:  # Bottom row
+                doors[direction] = False
+            elif direction == 'E' and (i % self.size) == self.size - 1:  # Right edge
+                doors[direction] = False
+            elif direction == 'W' and (i % self.size) == 0:  # Left edge
+                doors[direction] = False
+            # Doors to nonexistent rooms should be added to the queue
+            if neighbour is None and doors[direction]:
+                self.queue.append(neighbor_index)
+
         self.grid[i] = Room(doors)
+        self.queue = list(set(self.queue))
         self.queue.remove(i)
 
     def __str__(self):
