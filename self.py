@@ -1,7 +1,10 @@
 import random
 from typing import List, Optional
+import logging
 
 OPPOSITES = {'N': "S", 'E': "W", 'S': "N", 'W': "E"}
+
+logger = logging.getLogger(__name__)
 
 
 class Level:
@@ -22,20 +25,23 @@ class Level:
             if is_door:
                 self.queue.append(middle + self.offsets[direction])
 
+        while self.queue:
+            self.generate()
+
     def generate(self):
         choice = random.choice(self.queue)
         self.add_room(choice)
 
     def add_room(self, i):
         assert self.grid[i] is None
-        print(f"adding room {i}")
+        logger.debug(f'Adding room {i}')
 
         doors = {direction: bool(random.getrandbits(1)) for direction in self.offsets}
         for direction, offset in self.offsets.items():
             neighbor_index = i + offset
             print(f"adding neighbor {neighbor_index} {len(self.grid) - 1}")
             if neighbor_index < 0 or neighbor_index > len(self.grid) - 1:
-                print("out of range, skipping")
+                logger.debug(f'Neighbor {i}out of range, skipping')
                 doors[direction] = False
                 continue
             neighbour = self.grid[neighbor_index]
@@ -90,10 +96,11 @@ class Room:
                 self.doors[key] = bool(random.getrandbits(1))
 
 
-level = Level(5)
-print(level)
-print(f"{level.queue=}")
-while level.queue:
-    level.generate()
+if __name__ == "__main__":
+    level = Level(5)
     print(level)
     print(f"{level.queue=}")
+    while level.queue:
+        level.generate()
+        print(level)
+        print(f"{level.queue=}")
