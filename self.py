@@ -33,8 +33,9 @@ class Level:
         doors = {direction: bool(random.getrandbits(1)) for direction in self.offsets}
         for direction, offset in self.offsets.items():
             neighbor_index = i + offset
-            print(f"adding neighbor {neighbor_index} {len(self.grid)}")
-            if neighbor_index > 0 and neighbor_index < len(self.grid):
+            print(f"adding neighbor {neighbor_index} {len(self.grid) - 1}")
+            if neighbor_index < 0 or neighbor_index > len(self.grid) - 1:
+                print("out of range, skipping")
                 doors[direction] = False
                 continue
             neighbour = self.grid[neighbor_index]
