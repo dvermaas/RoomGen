@@ -24,7 +24,7 @@ private:
     mt19937 rng;
 
 public:
-    explicit Level(const int size) : size(size), grid(size * size, nullptr), offset{-size, 1, size, -1 },rng(rd()) {
+    explicit Level(const int size) : size(size), grid(size * size, nullptr), offset{-size, 1, size, -1}, rng(rd()) {
         const int middle = (size / 2) * size + (size / 2);
         constexpr array<bool, 4> doors = {true, true, true, true};
         grid[middle] = new Room(doors);
@@ -35,9 +35,12 @@ public:
             }
         }
 
-        // while (!queue.empty()) {
-        //     generate();
-        // }
+
+        while (!queue.empty()) {
+            generate();
+            print();
+            printQueue();
+        }
     }
 
     void generate() {
@@ -45,9 +48,18 @@ public:
         addRoom(choice);
     }
 
+    static void removeDuplicates(std::vector<int> &vec) {
+        sort(vec.begin(), vec.end()); // Sort the vector
+        vec.erase(unique(vec.begin(), vec.end()), vec.end()); // Remove duplicates
+    }
+
     void addRoom(const int o) {
+        cout << "Adding room :" << o << endl;
         // stop when illegal position
-        if (grid[o] != nullptr) return;
+        if (grid[o] != nullptr) {
+            raise(*"Incorrect room added");
+            return;
+        }
 
         // randomize doors
         array<bool, 4> doors{};
@@ -63,9 +75,9 @@ public:
                 continue;
             };
 
-            Room *neighbour = grid[neighbor_index];
+            const Room *neighbour = grid[neighbor_index];
             // create door if neighbour has door
-            if (neighbour != nullptr && neighbour->doors[(i+2)%4]) {
+            if (neighbour != nullptr && neighbour->doors[(i + 2) % 4]) {
                 doors[i] = true;
             }
             // remove illegal doors
@@ -82,32 +94,42 @@ public:
                 doors[i] = false;
             };
             // doors to the void should be put in the queue
-            if (neighbour != nullptr and doors[i]) {
+            if (neighbour == nullptr and doors[i]) {
+                cout << "adding to queue: " << neighbor_index << endl;
                 queue.push_back(neighbor_index);
             }
         };
+
         grid[o] = new Room(doors);
+        removeDuplicates(queue);
         queue.erase(ranges::remove(queue, o).begin(), queue.end());
     }
 
-    void print() {
-        vector<vector<char>> display_grid(2 * size - 1, vector<char>(2 * size - 1, ' '));
+    void printQueue() const {
+        std::cout << "Queue:";
+        for (int value: queue) {
+            std::cout << value << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    void print() const {
+        vector<vector<char> > display_grid(2 * size - 1, vector<char>(2 * size - 1, ' '));
 
         for (int i = 0; i < grid.size(); ++i) {
-            const Room *room = grid[i];
-            if (room != nullptr) {
+            if (const Room *room = grid[i]; room != nullptr) {
                 int x = (i % size) * 2;
                 int y = (i / size) * 2;
                 display_grid[y][x] = 'X';
-                if (room->doors[1]) display_grid[y - 1][x] = '|';
-                if (room->doors[2]) display_grid[y][x + 1] = '-';
-                if (room->doors[3]) display_grid[y + 1][x] = '|';
-                if (room->doors[4]) display_grid[y][x - 1] = '-';
+                if (room->doors[0]) display_grid[y - 1][x] = '|';
+                if (room->doors[1]) display_grid[y][x + 1] = '-';
+                if (room->doors[2]) display_grid[y + 1][x] = '|';
+                if (room->doors[3]) display_grid[y][x - 1] = '-';
             }
         }
 
-        for (const auto &row : display_grid) {
-            for (const char cell : row) {
+        for (const auto &row: display_grid) {
+            for (const char cell: row) {
                 cout << cell;
             }
             cout << endl;
@@ -117,8 +139,7 @@ public:
 
 
 int main() {
-    cout << "Hello, World!" << endl;
     Level level(5);
-    level.print();
+    // level.print();
     return 0;
 };
